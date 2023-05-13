@@ -1,29 +1,49 @@
-package main
+package commands
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/hex"
-	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
-	"os"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jmhobbs/authy-cli/api"
+	"github.com/jmhobbs/authy-cli/flags"
+	"github.com/jmhobbs/authy-cli/store"
 	"github.com/peterbourgon/ff/v3/ffcli"
 )
 
-func register(authy *Authy) *ffcli.Command {
+func generateRandom() ([]byte, error) {
+	buf := make([]byte, 32)
+	_, err := rand.Read(buf)
+	return buf, err
+}
+
+func Register(db *store.Store, authy *api.Authy) *ffcli.Command {
+	fs := flag.NewFlagSet("authy-cli register", flag.ExitOnError)
+	flags.Register(fs)
+
 	return &ffcli.Command{
 		Name:       "register",
 		ShortUsage: "authy-cli register <country code> <phone>",
 		ShortHelp:  "Register as a device on this account",
+		FlagSet:    fs,
 		Exec: func(_ context.Context, args []string) error {
-			// todo: check if already registered
-			// todo: check format of args
-
 			if len(args) != 2 {
 				return fmt.Errorf("register takes 2 arguments, got %d", len(args))
+			}
+
+			config, err := db.Config()
+			if err != nil && err != store.ErrNotFound {
+				return fmt.Errorf("unable to get device config: %w", err)
+			}
+
+			if config.IsRegistered() {
+				// todo: prompt to unregister
+				return fmt.Errorf("device already registered")
 			}
 
 			deviceUUID := uuid.Must(uuid.NewRandom()).String()
@@ -49,7 +69,7 @@ func register(authy *Authy) *ffcli.Command {
 			log.Printf("Device registration request sent to other devices via %s", registrationResult.Provider)
 			log.Println("Please accept this request.")
 
-			var registrationStatus RegistrationStatus
+			var registrationStatus api.RegistrationStatus
 
 			// retry every ~2s for two minutes
 			var accepted = false
@@ -76,25 +96,18 @@ func register(authy *Authy) *ffcli.Command {
 				return err
 			}
 
-			// todo: save all this in a better place
-			f, err := os.Create("config.json")
-			if err != nil {
-				return err
-			}
-			defer f.Close()
-
-			cfg := Config{
+			cfg := store.Config{
 				AuthyId: deviceRegistration.AuthyId,
-				Device: Device{
+				Device: store.Device{
 					Id:         deviceRegistration.Device.Id,
 					SecretSeed: deviceRegistration.Device.SecretSeed,
 					ApiKey:     deviceRegistration.Device.ApiKey,
 				},
 			}
 
-			err = json.NewEncoder(f).Encode(cfg)
+			err = db.WriteConfig(cfg)
 			if err != nil {
-				return err
+				return fmt.Errorf("unable to save config: %w", err)
 			}
 
 			log.Println("Registration complete!")

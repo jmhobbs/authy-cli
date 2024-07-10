@@ -1,4 +1,21 @@
+---
+
+### ⚠️ Warning To New Users ⚠️
+Registration does not currently work, the Authy API has changed.  Please see [this issue](https://github.com/jmhobbs/authy-cli/issues/2) for more information.
+
+---
+
 The `authy-cli` tool is an alternative client for connecting to Authy.  It is meant for educational purposes only.
+
+# Installation
+
+If you use Homebrew, you can install from the tap:
+
+```
+$ brew install jmhobbs/tools/authy-cli
+```
+
+Otherwise, you can install the binary manually from the [latest release](https://github.com/jmhobbs/authy-cli/releases)
 
 # Commands
 

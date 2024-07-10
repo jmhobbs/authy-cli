@@ -17,7 +17,7 @@ type Token struct {
 	Digits                  int         `json:"digits"`
 	EncryptedSeed           string      `json:"encrypted_seed"`
 	Issuer                  interface{} `json:"issuer"`
-	KeyDerivationIterations interface{} `json:"key_derivation_iterations"`
+	KeyDerivationIterations int         `json:"key_derivation_iterations"`
 	Logo                    interface{} `json:"logo"`
 	Name                    string      `json:"name"`
 	OriginalName            string      `json:"original_name"`
@@ -36,8 +36,8 @@ func (t Token) Decrypt(passphrase []byte) ([]byte, error) {
 	}
 
 	iterations := 1000
-	if t.KeyDerivationIterations != nil {
-		iterations = t.KeyDerivationIterations.(int)
+	if t.KeyDerivationIterations != 0 {
+		iterations = t.KeyDerivationIterations
 	}
 
 	key := pbkdf2.Key(bytes.TrimSpace(passphrase), []byte(t.Salt), iterations, 32, sha1.New)

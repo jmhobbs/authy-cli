@@ -55,9 +55,12 @@ func Token(db *store.Store) *ffcli.Command {
 			}
 
 			name, totp, err := getTotp(db, config, args[0])
-			if err == store.ErrNotFound {
-				log.Println("unable to find an app or token")
-				return nil
+			if err != nil {
+				if err == store.ErrNotFound {
+					log.Println("unable to find an app or token")
+					return nil
+				}
+				return fmt.Errorf("unable to get token: %w", err)
 			}
 
 			otp, expires := totp.NowWithExpiration()

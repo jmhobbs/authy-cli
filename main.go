@@ -67,6 +67,7 @@ func main() {
 			commands.Token(db),
 			commands.List(db),
 			commands.Unlock(db),
+			commands.Version,
 		},
 		Exec: func(context.Context, []string) error {
 			return flag.ErrHelp

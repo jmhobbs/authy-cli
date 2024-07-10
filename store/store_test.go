@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/jmhobbs/authy-cli/api"
+	"github.com/jmhobbs/authy-cli/model"
 	"github.com/jmhobbs/authy-cli/store"
 	"github.com/stretchr/testify/assert"
 )
@@ -16,7 +16,8 @@ func TestStoreReadWrite(t *testing.T) {
 	}
 	defer os.RemoveAll(dir)
 
-	s := store.New(dir, func() (string, error) { return "top secret", nil })
+	s, err := store.New(dir, func() (string, error) { return "top secret", nil })
+	assert.NoError(t, err)
 
 	expectedConfig := store.Config{
 		AuthyId: 12345,
@@ -35,7 +36,7 @@ func TestStoreReadWrite(t *testing.T) {
 
 	assert.Equal(t, &expectedConfig, actualConfig)
 
-	expectedApps := []api.App{
+	expectedApps := []model.App{
 		{
 			Id:      "app-one",
 			Name:    "Sendgrid",
@@ -56,7 +57,7 @@ func TestStoreReadWrite(t *testing.T) {
 
 	assert.Equal(t, expectedApps, actualApps)
 
-	expectedTokens := []api.AuthenticatorToken{
+	expectedTokens := []model.Token{
 		{
 			AccountType: "fake",
 			Name:        "fake",

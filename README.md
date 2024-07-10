@@ -89,13 +89,13 @@ Current: 699902 (17s)
 
 ## export
 
-Export will dump all of the information `authy-cli` holds as a JSON object onto stdout.
+Export will dump all of the information `authy-cli` holds as a JSON object into a file.  Use `-` to stream to stdout.
 
 ```
-$ authy-cli export | jq .
+$ authy-cli export - | jq .
 Enter Storage Password:
 {
-  "Config": {
+  "config": {
     "authy_id": 123456,
     "device": {
       "id": 654321,
@@ -103,9 +103,30 @@ Enter Storage Password:
       "api_key": "abcde"
     }
   },
-  "Tokens": [
+  "tokens": [
     {
       "account_type": "slack",
+      ...
+```
+
+Optionally, you can decrypt all your tokens during export with `-decrypt`.  Protect the export file you create, it is not secured, and anyone with this file can mimic your tokens, defeating MFA.
+
+```
+$ authy-cli export -decrypt - | jq .
+Enter Storage Password:
+{
+  "config": {
+    "authy_id": 123456,
+    "device": {
+      "id": 654321,
+      "secret_seed": "abcde",
+      "api_key": "abcde"
+    }
+  },
+  "tokens": [
+    {
+      "account_type": "slack",
+      "decrypted_seed": "THISISACLEARTEXTTOTPSEED====",
       ...
 ```
 
